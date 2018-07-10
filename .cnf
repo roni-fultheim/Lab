@@ -1,0 +1,43 @@
+[DEFAULT]
+output_dir = /private7/common/Data/DataSets/beta_cells/fastq_no_duplicates/human_A_B/
+sra_dir = /private7/common/Data/DataSets/beta_cells/fastq/human_A_B/
+file_name = 
+
+[Run]
+working_dir = %(output_dir)s
+date = Wed Sep  6 15:53:10 2017
+version = Verion 1, 13-12-2011
+
+[Step_1]
+enable = True
+type = shell
+name = remove duplicates single end
+description = perl516prinseq-lite.pl
+program = perl516 home/alu/fulther/scripts_perl/prinseq-lite.pl
+parameters = -fastq %(file_name)s_1.fastq -derep 1
+next_step = Step_2
+error_step = Step_-1
+
+[Step_2]
+enable = False
+type = shell
+name = remove duplicates paired end
+description = perl516prinseq-lite.pl
+program = perl516 home/alu/fulther/scripts_perl/prinseq-lite.pl
+parameters = -fastq %(file_name)s_1.fastq -fastq2 %(file_name)s_2.fastq -derep 1
+next_step = Step_3
+error_step = Step_-1
+
+[Step_-1]
+enable = True
+type = mail
+name = error stage
+description = error stage
+program = mail
+text = run of  %(output_dir)s ended with error
+from = fulther@localhost
+to = ronif10@gmail.com
+parameters = -O %(output_dir)s/ "%(sra_dir)s"%(file_name)s.sra
+next_step = Step_-2
+error_step = Step_-2
+

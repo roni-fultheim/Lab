@@ -1,0 +1,43 @@
+[Run]
+working_dir = %(output_dir)s     
+date = 060917
+version = 1
+
+[Step_1]
+Enable = True
+Type = shell
+name = remove duplicates single end
+description = perl516prinseq-lite.pl 
+program =  perl516 /home/alu/fulther/scripts_perl/prinseq-lite.pl
+parameters = -fastq %(sra_dir)s/%(file_name)s_1.fastq -derep 1
+next_step = Step_2
+error_step = Step_-1
+
+[Step_2]
+Enable = False
+Type = shell
+name = remove duplicates paired end
+description = perl516prinseq-lite.pl 
+program =  perl516 /home/alu/fulther/scripts_perl/prinseq-lite.pl
+parameters = -fastq %(sra_dir)s/%(file_name)s_1.fastq -fastq2 %(sra_dir)s/%(file_name)s_2.fastq -derep 1
+next_step = Step_3
+error_step = Step_-1
+
+[Step_-1]
+Enable = True
+Type = mail
+name = error stage
+description = error stage
+program = mail
+text=run of  %(output_dir)s ended with error
+from=fulther@localhost
+to=ronif10@gmail.com
+parameters = -O %(output_dir)s/ "%(sra_dir)s"%(file_name)s.sra
+next_step=Step_-2
+error_step = Step_-2
+
+
+[DEFAULT]
+output_dir = /private7/common/Data/DataSets/beta_cells/fastq/human_A_B/no_duplicates_good
+sra_dir= /private7/common/Data/DataSets/beta_cells/fastq/human_A_B/missing_dups
+file_name = TCGA-A1-A0SK-01A-12R-A084-07_Aligned.out.sorted.bam

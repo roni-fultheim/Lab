@@ -1,0 +1,31 @@
+[Run]
+working_dir = %(output_dir)s     
+date = 250917
+version = 1
+
+[Step_1]
+Enable = True
+Type=shell
+name = run featureCounts
+description = run featureCounts
+program = /private/apps/bin/featureCounts
+parameters = -a /home/alu/ilanas/support_files/hg19/hg19_UCSCgenes_26_10_15.gtf -i %(input_dir)s/%(file_name)s_Aligned.out.sorted.bam -o %(output_dir)s/%(file_name)s.counts -F 'GTF' -b -p -T 3 >& %(output_dir)s/%(file_name)s_fc.log
+next_step = Step_2
+error_step = Step_-1
+
+[Step_-1]
+Enable = True
+Type = mail
+name = error stage
+description = error stage
+program = mail
+text=run of  %(output_dir)s ended with error
+from=fulther@localhost
+to=ronif10@gmail.com
+parameters = -O %(output_dir)s/ "%(input_dir)s"%(file_name)s.sra
+next_step=Step_-2
+error_step = Step_-2
+
+[DEFAULT]
+output_dir = /private7/projects/beta_cells/Oslo_data/featureCounts
+input_dir = /private7/projects/beta_cells/Oslo_data/links/bamLinksPE

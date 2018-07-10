@@ -1,0 +1,54 @@
+[Run]
+working_dir = %(output_dir)s     
+date = 030414
+version = 1
+
+[Step_1]
+Enable = True
+Type = shell
+name = sort editing file
+description = sort
+program =  sort 
+parameters =  -k1,1 -k2,2n /home/alu/ilanas/Database/PAAD/Human_AG_hg19_noALUsyn_noSNP_PAAD_HE.TAB.txt > %(output_dir)s/%(file_name)s.Human_AG_hg19_noALUsyn_noSNP_PAAD_HE.sorted.txt
+next_step = Step_2
+error_step = Step_-1
+
+[Step_2]
+Enable = True
+Type = shell
+name = run the editing level
+description = run
+program =  REDItoolKnown.py
+parameters =  -i %(sra_dir)s/%(file_name)s_Aligned.out.sorted.bam -f /private/dropbox/Genomes/Human/hg19.tophat/hg19_1L.fa -l %(output_dir)s/%(file_name)s.Human_AG_hg19_noALUsyn_noSNP_PAAD_HE.sorted.txt -v 2 -n 0.01 -r 1 -T 3-3 -o %(output_dir)s/%(file_name)s_Folder >& %(output_dir)s/%(file_name)s.log.edt 
+next_step = Step_3
+error_step = Step_-1
+
+[Step_3]
+Enable = True
+Type = shell
+name = change file name
+description = run
+program =  mv
+parameters =  %(output_dir)s/%(file_name)s_Folder/*/outTable_* /private5/Projects/TCGA/PAAD/KnownEditing/all/%(file_name)s
+next_step = Step_8
+error_step = Step_-1
+
+[Step_-1]
+Enable = True
+Type = mail
+name = error stage
+description = error stage
+program = mail
+text=run of  %(output_dir)s ended with error
+from=miridanan@localhost
+to=miridanan@yahoo.com
+parameters = -O %(output_dir)s/ "%(sra_dir)s"%(file_name)s.sra
+next_step=Step_-2
+error_step = Step_-2
+
+
+[DEFAULT]
+output_dir = /private5/Projects/TCGA/PAAD/KnownEditing
+sra_dir= /private5/Projects/TCGA/PAAD/bamLinks/mapped
+file_name = TCGA-A1-A0SK-01A-12R-A084-07_Aligned.out.sorted.bam
+

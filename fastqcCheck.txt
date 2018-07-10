@@ -1,0 +1,62 @@
+[Run]
+working_dir = %(output_dir)s     
+date = 030315
+version = 1
+
+[Step_1]
+enable = True
+Type = cmd
+name = run quality check
+description = run quality check
+program = fastqc
+parameters = -q --extract -o %(output_dir)s %(sra_dir)s/%(file_name)s.fastq
+next_step = Step_3
+error_step = Step_-1
+
+[Step_2]
+enable = False
+Type = cmd
+name = run quality check
+description = run quality check
+program = fastqc
+parameters = -q --extract -o %(output_dir)s %(sra_dir)s/%(file_name)s.2.fastq
+next_step = Step_3
+error_step = Step_-1
+
+[Step_3]
+enable = True
+Type = cmd
+name = check quality summary 1
+description = check quality summary
+program = perl516 /home/alu/ilanas/Scripts/perl/check_fastqc_output.pl
+parameters = %(output_dir)s/%(file_name)s.fastqc/summary.txt
+next_step = Step_5
+error_step = Step_-1
+
+[Step_4]
+enable = False
+Type = cmd
+name = check quality summary 2
+description = check quality summary
+program = perl516 /home/alu/ilanas/Scripts/perl/check_fastqc_output.pl
+parameters = %(output_dir)s/%(file_name)s_2.fastqc/summary.txt
+next_step = Step_5
+error_step = Step_-1
+
+[Step_-1]
+Enable = True
+Type = mail
+name = error stage
+description = error stage
+program = mail
+text=run of  %(output_dir)s ended with error
+from=fulther@localhost
+to=ronif10@gmail.com
+parameters = -O %(output_dir)s/ "%(sra_dir)s"%(file_name)s.sra
+next_step=Step_-2
+error_step = Step_-2
+
+[DEFAULT]
+output_dir = /private7/common/Data/DataSets/beta_cells/fastqc/data1
+sra_dir = /private7/common/Data/DataSets/beta_cells/fastq/data1
+sam_file_name = sam

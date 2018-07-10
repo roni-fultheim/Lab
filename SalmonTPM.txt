@@ -1,0 +1,35 @@
+[Run]
+working_dir = %(output_dir)s     
+date = 140317
+version = 1
+
+[Step_1]
+enable = True
+Type=shell
+name = tpm 
+description = run salmon
+program = /home/alu/noa/code/Salmon-0.8.2_linux_x86_64/bin/salmon
+parameters = quant -i %(transcripts_index)s -p 10 -l A -r <(bzcat %(fastq_dir)s/%(file_name)s.fastq.bz2) -o %(output_dir)s
+next_step = Step_2
+error_step = Step_-1
+
+[Step_2]
+enable = True
+Type=shell
+name = move final tpm files 
+description = mv
+program = mv
+parameters = %(output_dir)s/quant.sf %(tpm_results)s/%(file_name)s
+next_step = Step_3
+error_step = Step_-1
+
+
+[DEFAULT]
+
+output_dir =/private7/projects/SCAP_T/tpm/run/
+sam_link_dir = /private6/common/Data/SCAP_T/dbGap_v6/fastq/
+transcripts_index=/home/alu/dorony/salmon/hg38_index/
+fastq_dir=/private6/common/Data/SCAP_T/dbGap_v6/fastq/
+tpm_results=/private7/projects/SCAP_T/tpm/results/
+
+

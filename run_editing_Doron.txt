@@ -1,0 +1,221 @@
+[Run]
+working_dir = %(output_dir)s     
+date = 140317
+version = 1
+
+[Step_1]
+Enable = False
+Type = shell
+name = uniq
+description = keep unique reads only
+program = /private/common/Software/SamTools/samtools-0.1.18/samtools
+parameters = view -b -q 255 %(sam_link_dir)s/%(file_name)s.bam > %(output_dir)s/%(file_name)s.bam
+next_step = Step_2
+error_step = Step_-1
+
+[Step_2]
+Enable = False
+Type = shell
+name = sort bam files
+description = sort
+program = /private/common/Software/SamTools/samtools-0.1.18/samtools
+parameters = sort %(output_dir)s/%(file_name)s.bam %(output_dir)s/%(file_name)s.sorted
+next_step = Step_3
+error_step = Step_-1
+
+[Step_3]
+Enable = False
+Type = shell
+name = index bam files
+description = index
+program = /private/common/Software/SamTools/samtools-0.1.18/samtools
+parameters = index %(output_dir)s/%(file_name)s.sorted.bam
+next_step = Step_4
+error_step = Step_-1
+
+[Step_4]
+Enable = False
+Type = shell
+name = bam to bam alignment files only for chrs
+description = bam to bam
+program = /private/common/Software/SamTools/samtools-0.1.18/samtools
+parameters = view -b %(output_dir)s/%(file_name)s.sorted.bam  chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY> %(output_dir)s/%(file_name)s.chr.bam
+next_step = Step_5
+error_step = Step_-1
+
+[Step_5]
+Enable = False
+Type = shell
+name = sort clean bam files
+description = sort
+program = /private/common/Software/SamTools/samtools-0.1.18/samtools
+parameters = sort %(output_dir)s/%(file_name)s.chr.bam %(output_dir)s/%(file_name)s.sorted.chr
+next_step = Step_6
+error_step = Step_-1
+
+[Step_6]
+Enable = False
+Type = shell
+name = remove unsorted bam file and before mark duplication 
+description = remove 
+program =  find %(output_dir)s -type f ! -name '*sorted.chr.bam' -delete
+parameters =  
+next_step = Step_7
+error_step = Step_-1
+
+[Step_7]
+Enable = False
+Type = shell
+name = mark duplicates
+description = mark duplicates
+program = java7.1 -jar /private/common/Software/picard/picard-tools-1.91/MarkDuplicates.jar I=%(output_dir)s/%(file_name)s.sorted.chr.bam O=%(bam_out)s/%(file_name)s_noDup.bam CREATE_INDEX=false ASSUME_SORTED=true VALIDATION_STRINGENCY=SILENT METRICS_FILE=%(dup_matrices_out)s/%(file_name)s_output.metrics REMOVE_DUPLICATES=true
+parameters = 
+next_step = Step_8
+error_step = Step_-1
+
+[Step_8]
+Enable = False
+Type = shell
+name = index bam files
+description = index
+program = /private/common/Software/SamTools/samtools-0.1.18/samtools
+parameters = index %(bam_out)s/%(file_name)s_noDup.bam
+next_step = Step_9
+error_step = Step_-1
+
+[Step_9]
+enable = False
+type = shell
+name = run the editing level
+description = run
+program = python /private/common/Software/REDITOOLS/REDItools-1.0.4/reditools/REDItoolKnownHillel.py
+parameters = -i %(bam_out)s/%(file_name)s_noDup.bam -f %(genome_fasta_file)s  -l %(editing_sites_list)s  -c 0 -v 0 -n 0 -r 1 -t 3 -o %(output_dir)s/%(file_name)s_Folder >& %(output_dir)s/%(file_name)s.log.edt
+next_step = Step_10
+error_step = Step_-1
+
+[Step_10]
+enable = False
+type = shell
+name = change file name
+description = run
+program = mv
+parameters = %(output_dir)s/%(file_name)s_Folder/*/outTable_* %(redi_results_noDup)s/%(file_name)s
+next_step = Step_11
+error_step = Step_-1
+
+[Step_11]
+enable = False
+type = shell
+name = move bam file
+description = run
+program = mv
+parameters = %(output_dir)s/%(file_name)s.sorted.chr.bam %(full_bam_out)s/%(file_name)s
+next_step = Step_12
+error_step = Step_-1
+
+[Step_12]
+Enable = False
+Type = shell
+name = index bam files
+description = index
+program = /private/common/Software/SamTools/samtools-0.1.18/samtools
+parameters = index %(full_bam_out)s/%(file_name)s
+next_step = Step_13
+error_step = Step_-1
+
+[Step_13]
+enable = False
+type = shell
+name = run the editing level
+description = run
+program = python /private/common/Software/REDITOOLS/REDItools-1.0.4/reditools/REDItoolKnownHillel.py
+parameters = -i %(full_bam_out)s/%(file_name)s -f  %(genome_fasta_file)s -l %(editing_sites_list)s  -c 0 -v 0 -n 0 -r 1 -t 3 -o %(output_dir)s/%(file_name)s_Folder >& %(output_dir)s/%(file_name)s.full_bam.log.edt
+next_step = Step_14
+error_step = Step_-1
+
+[Step_14]
+enable = False
+type = shell
+name = change file name
+description = run
+program = mv
+parameters = %(output_dir)s/%(file_name)s_Folder/*/outTable_* %(redi_results_full_bam)s/%(file_name)s
+next_step = Step_15
+error_step = Step_-1
+
+[Step_15]
+enable = False
+Type=shell
+name = run featureCounts
+description = run featureCounts
+program = /private/apps/bin/featureCounts
+parameters = -a %(fc_gtf)s -i %(bam_out)s/%(file_name)s_noDup.bam -o  %(fc_output)s/noDup/%(file_name)s.noDup_counts -F 'GTF' -b -p -T 3 >& %(fc_output)s/noDup/logs/%(file_name)s_fc.log
+next_step = Step_16
+error_step = Step_-1
+
+[Step_16]
+enable = False
+Type=shell
+name = run featureCounts
+description = run featureCounts
+program = /private/apps/bin/featureCounts
+parameters = -a %(fc_gtf)s -i %(full_bam_out)s/%(file_name)s -o  %(fc_output)s/full_bam/%(file_name)s.full_bam_counts -F 'GTF' -b -p -T 3 >& %(fc_output)s/full_bam/logs/%(file_name)s_fc.log
+next_step = Step_17
+error_step = Step_-1
+
+[Step_17]
+enable = True
+Type=shell
+name = make dir for salmon log
+description = mkdir
+program = mkdir
+parameters = %(tpm_output)s/%(file_name)s
+next_step = Step_18
+error_step = Step_-1
+
+[Step_18]
+enable = True
+Type=shell
+name = tpm 
+description = run salmon
+program = /home/alu/noa/code/Salmon-0.8.2_linux_x86_64/bin/salmon
+parameters = quant -i %(transcripts_index)s --geneMap %(gtf_transcript_to_gene)s -l A -1 <(bunzip2 -c %(fastq_dir)s/%(file_name)s_1.fastq.bz2) -2 <(bunzip2 -c %(fastq_dir)s/%(file_name)s_2.fastq.bz2) -o %(tpm_output)s/%(file_name)s
+next_step = Step_19
+error_step = Step_-1
+
+[Step_19]
+enable = True
+Type=shell
+name = move final tpm files 
+description = mv
+program = mv
+parameters = %(tpm_output)s/%(file_name)s/quant.sf %(tpm_results)s/%(file_name)s
+next_step = Step_20
+error_step = Step_-1
+
+
+[DEFAULT]
+
+output_dir = /private3/single_cell/Darmanis_2015/Known_editing/noDup/REDI_run
+sam_link_dir = /private3/single_cell/Darmanis_2015/links_to_raw_bam
+sam_file_name = sam
+
+full_bam_out =/private3/single_cell/Darmanis_2015/bam/full_bam/
+bam_out = /private3/single_cell/Darmanis_2015/bam/noDup
+
+redi_results_noDup = /private3/single_cell/Darmanis_2015/Known_editing/noDup/REDI_results
+redi_results_full_bam = /private3/single_cell/Darmanis_2015/Known_editing/full_bam/REDI_results
+
+dup_matrices_out = /private3/single_cell/Darmanis_2015/bam/dup_matrices
+
+genome_fasta_file = /private/common/Data/Genomes/Human/hg19/all_inc_chrM.fa
+editing_sites_list = ~/editing_site_lists/hg_19/mammalian_conserved_AG_hg19_noALU_noSNP_consrved.TAB.forREDItools.txt.gz
+
+fc_gtf=/home/alu/dorony/gtf_files/hg19_UCSCgenes_11_03_18.gtf
+fc_output= /private3/single_cell/Darmanis_2015/feature_counts
+
+transcripts_index=/home/alu/dorony/salmon/hg19_index/
+fastq_dir=/private3/single_cell/Darmanis_2015/fastaq/
+tpm_output=/private3/single_cell/Darmanis_2015/tpm/run/
+tpm_results=/private3/single_cell/Darmanis_2015/tpm/results/
+gtf_transcript_to_gene=/home/alu/dorony/gtf_files/hg19_UCSCgenes_gene_names.gtf

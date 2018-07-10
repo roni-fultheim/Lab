@@ -1,0 +1,62 @@
+[Run]
+working_dir = %(output_dir)s     
+date = 241217
+version = 1
+
+[Step_1]
+enable = True
+Type = cmd
+name = run STAR
+description = run STAR
+program = STAR252
+parameters = --genomeDir /private/common/Data/Genomes/Human/hg19.STAR --readFilesIn %(sra_dir)s/%(file_name)s_R1.fastq %(sra_dir)s/%(file_name)s_R2.fastq --runThreadN 8 --outFilterMultimapNmax 1 --outReadsUnmapped Fastx --genomeLoad LoadAndKeep --outSAMattributes All --outSJfilterCountUniqueMin 10 2 2 2 --outSJfilterCountTotalMin 10 2 2 2 --alignSJDBoverhangMin 5 --clip3pAdapterSeq AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTA --outFileNamePrefix  %(output_dir)s/%(file_name)s_
+next_step = Step_2
+error_step = Step_-1
+
+[Step_2]
+Enable = True
+Type = shell
+name = sam to bam alignment files
+description = sam to bam
+program = samtools
+parameters = view -bS %(output_dir)s/%(file_name)s_Aligned.out.sam > %(output_dir)s/%(file_name)s_Aligned.out.bam
+next_step = Step_3
+error_step = Step_-1
+
+[Step_3]
+Enable = True
+Type = shell
+name = sort bam files
+description = sort
+program = samtools
+parameters = sort %(output_dir)s/%(file_name)s_Aligned.out.bam %(output_dir)s/%(file_name)s_Aligned.out.sorted
+next_step = Step_4
+error_step = Step_-1
+
+[Step_4]
+Enable = True
+Type = shell
+name = index bam files
+description = index
+program = samtools
+parameters = index %(output_dir)s/%(file_name)s_Aligned.out.sorted.bam
+next_step = Step_5
+error_step = Step_-1
+
+[Step_-1]
+Enable = True
+Type = mail
+name = error stage
+description = error stage
+program = mail
+text=run of  %(output_dir)s ended with error
+from=miridanan@localhost
+to=miridanan@yahoo.com
+parameters = -O %(output_dir)s/ "%(sra_dir)s"%(file_name)s.sra
+next_step=Step_-2
+error_step = Step_-2
+
+[DEFAULT]
+output_dir = /private7/projects/beta_cells/Yuval_dor/STAR_new
+sra_dir = /private7/projects/beta_cells/Yuval_dor/fastq/fastq_no_duplicates
+
